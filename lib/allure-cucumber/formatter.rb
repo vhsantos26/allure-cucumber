@@ -107,9 +107,9 @@ module AllureCucumber
     end
     
     def before_test_step(test_step)
-      if !TEST_HOOK_NAMES_TO_IGNORE.include?(test_step.name) 
+      if !TEST_HOOK_NAMES_TO_IGNORE.include?(test_step.text) 
         if @tracker.scenario_name
-          @tracker.step_name = test_step.name
+          @tracker.step_name = test_step.text
           start_step
         else
           @deferred_before_test_steps << {:step => test_step, :timestamp => Time.now}
@@ -118,16 +118,18 @@ module AllureCucumber
     end
     
     def after_test_step(test_step, result)
-      if test_step.name == 'Before hook'
+      if test_step.text == 'Before hook'
         if (!@before_hook_exception) && result.methods.include?(:exception)
           @before_hook_exception = result.exception
         end
-      elsif test_step.name != 'After hook'
-        if @tracker.scenario_name
-          status = step_status(result)
-          stop_step(status)
-        else
-          @deferred_after_test_steps << {:step => test_step, :result => result, :timestamp => Time.now}
+      elsif test_step.text != 'After hook'
+        if !TEST_HOOK_NAMES_TO_IGNORE.include?(test_step.text)
+          if @tracker.scenario_name
+            status = step_status(result)
+            stop_step(status)
+          else
+            @deferred_after_test_steps << {:step => test_step, :result => result, :timestamp => Time.now}
+          end
         end
       end
     end
@@ -251,4 +253,3 @@ module AllureCucumber
     
   end  
 end
-
