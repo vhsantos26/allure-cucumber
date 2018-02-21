@@ -122,14 +122,13 @@ module AllureCucumber
         if (!@before_hook_exception) && result.methods.include?(:exception)
           @before_hook_exception = result.exception
         end
-      elsif test_step.text != 'After hook'
-        if !TEST_HOOK_NAMES_TO_IGNORE.include?(test_step.text)
-          if @tracker.scenario_name
-            status = step_status(result)
-            stop_step(status)
-          else
-            @deferred_after_test_steps << {:step => test_step, :result => result, :timestamp => Time.now}
-          end
+      end
+      if !TEST_HOOK_NAMES_TO_IGNORE.include?(test_step.text)
+        if @tracker.scenario_name
+          status = step_status(result)
+          stop_step(status)
+        else
+          @deferred_after_test_steps << {:step => test_step, :result => result, :timestamp => Time.now}
         end
       end
     end
@@ -156,13 +155,7 @@ module AllureCucumber
     def after_multiline_arg(multiline_arg)
       @in_multiline_arg = false
     end
-
-    def embed(src, mime_type, label)
-      file = File.open(src)
-      file.close
-      attach_file(label, file)
-    end
-
+    
     private
 
     def remove_tag_prefix(tag, prefix)
@@ -218,7 +211,7 @@ module AllureCucumber
 
     def post_deferred_steps
       @deferred_before_test_steps.size.times do |index|
-        @tracker.step_name = @deferred_before_test_steps[index][:step].name 
+        @tracker.step_name = @deferred_before_test_steps[index][:step].text 
         start_step
         multiline_arg = @deferred_before_test_steps[index][:multiline_arg]
         attach_multiline_arg_to_file(multiline_arg) if multiline_arg
