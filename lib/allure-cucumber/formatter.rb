@@ -24,7 +24,7 @@ module AllureCucumber
 
     def before_feature(feature)
       feature_identifier = ENV['FEATURE_IDENTIFIER'] && "#{ENV['FEATURE_IDENTIFIER']} - "
-      @tracker.feature_name = "#{feature_identifier}#{feature.name.tr(/\n/, ' ')}"
+      @tracker.feature_name = "#{feature_identifier}#{feature.name.gsub(/\n/, " ")}"
       AllureRubyAdaptorApi::Builder.start_suite(@tracker.feature_name)
     end
 
@@ -32,12 +32,11 @@ module AllureCucumber
       @scenario_outline = feature_element.instance_of?(Cucumber::Core::Ast::ScenarioOutline)
     end
 
-    def scenario_name(_keyword, name, *_args)
-      scenario_name = name.nil? || name == '' ? 'Unnamed scenario' : name.tr(/\n/, ' ')
-      @scenario_outline ? @scenario_outline_name = scenario_name : @tracker.scenario_name = scenario_name
+    def scenario_name(keyword, name, *args)
+      scenario_name = (name.nil? || name == "") ? "Unnamed scenario" : name.gsub(/\n/, " ")
+      @scenario_outline ? @scenario_outline_name = scenario_name : @tracker.scenario_name = scenario_name 
     end
 
-    # Analyze Cucumber Scenario Tags
     def after_tags(tags)
       tags.each do |tag|
         if AllureCucumber::Config.tms_prefix && tag.name.include?(AllureCucumber::Config.tms_prefix)
